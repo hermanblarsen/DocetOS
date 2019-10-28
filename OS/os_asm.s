@@ -5,19 +5,21 @@
     EXPORT SVC_Handler
     EXPORT PendSV_Handler
     EXPORT _task_switch
-    EXPORT _task_init_switch
+    EXPORT _task_initialiseSwitch
 
 ; Import global variables
     IMPORT _currentTCB
     IMPORT _OS_scheduler
 
 ; Import SVC routines
-    IMPORT _svc_OS_enable_systick
-    IMPORT _svc_OS_addTask
-    IMPORT _svc_OS_task_exit
-    IMPORT _svc_OS_yield
+    IMPORT _svc_OS_enableSystick
     IMPORT _svc_OS_schedule
-    IMPORT _svc_test_delegate
+	IMPORT _svc_OS_taskAdd
+    IMPORT _svc_OS_taskExit
+    IMPORT _svc_OS_taskYield
+	IMPORT _svc_OS_taskRemove
+	IMPORT _svc_OS_taskWait
+	IMPORT _svc_OS_taskNotify
     
 SVC_Handler
     ; Link register contains special 'exit handler mode' code
@@ -42,12 +44,14 @@ SVC_Handler
     
     ALIGN
 SVC_tableStart
-    DCD _svc_OS_enable_systick
-    DCD _svc_OS_addTask
-    DCD _svc_OS_task_exit
-    DCD _svc_OS_yield
-    DCD _svc_OS_schedule
-    DCD _svc_test_delegate
+    DCD _svc_OS_enableSystick
+	DCD _svc_OS_schedule
+    DCD _svc_OS_taskAdd
+    DCD _svc_OS_taskExit
+    DCD _svc_OS_taskYield
+	DCD _svc_OS_taskRemove
+	DCD _svc_OS_taskWait
+	DCD _svc_OS_taskNotify
 SVC_tableEnd
 
     ALIGN
@@ -81,7 +85,7 @@ _task_switch
     BX      lr
 
     ALIGN
-_task_init_switch
+_task_initialiseSwitch
     ; Assume thread mode on entry
     ; Initial task is the idle task
     ; On entry r0 = OS_idleTCB_p (OS_TCB *)
@@ -99,7 +103,7 @@ _task_init_switch
     ; Instruction barrier (stack pointer switch)
     ISB
 	; Check to see if the scheduler is preemptive before
-    ; This SVC call should be handled by _svc_OS_enable_systick()
+    ; This SVC call should be handled by _svc_OS_enableSystick()
     SVC     0x00
     ; Continue to the idle task
     

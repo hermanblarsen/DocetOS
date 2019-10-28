@@ -3,7 +3,7 @@
  * Auto generated Run-Time-Environment Component Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'DocetOS_base' 
+ * Project: 'DocetOS_ELE00062M' 
  * Target:  'STM32F407 Flash' 
  */
 

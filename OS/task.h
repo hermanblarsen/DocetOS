@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
+
+/*=============================================================================
+**       Type Definitions
+=============================================================================*/
 /* Describes a single stack frame, as found at the top of the stack of a task
    that is not currently running.  Registers r0-r3, r12, lr, pc and psr are stacked
 	 automatically by the CPU on entry to handler mode.  Registers r4-r11 are subsequently
@@ -27,22 +31,36 @@ typedef struct s_StackFrame {
 	volatile uint32_t psr;
 } OS_StackFrame_t;
 
-typedef struct {
+typedef struct OS_TCB_t {
 	/* Task stack pointer.  It's important that this is the first entry in the structure,
 	   so that a simple double-dereference of a TCB pointer yields a stack pointer. */
 	void * volatile sp;
-	/* This field is intended to describe the state of the thread - whether it's yielding,
-	   runnable, or whatever.  Only one bit of this field is currently defined (see the #define
-	   below), so you can use the remaining 31 bits for anything you like. */
+	/*  This field is intended to describe the state of the task - see bit definitions
+         below (TASK_STATE_*). The remaining bits can be utilised by the user.
+        */
 	uint32_t volatile state;
-	/* The remaining fields are provided for expandability.  None of them have a dedicated
-	   purpose, but their names might imply a use.  Feel free to use these fields for anything
-	   you like. */
+	/* This field holds the task priority  */
 	uint32_t volatile priority;
+    /* This field is used to store any data to aid the OS oepration and flow,
+		including awakening times for sleeping tasks. */
 	uint32_t volatile data;
+    /* Holds the previous task when in a runnable state,
+		implementing a doubly-linked list.  */
+    struct OS_TCB_t * volatile prev;
+	/* Holds the next task when in a runnable state,
+		implementing a doubly-linked list. Also used in other places in the
+		OS, including to implement a singly-linked list in the resource wait queue*/
+    struct OS_TCB_t * volatile next;
 } OS_TCB_t;
 
+
+/*=============================================================================
+**       Definitions
+=============================================================================*/
 /* Constants that define bits in a thread's 'state' field. */
-#define TASK_STATE_YIELD    (1UL << 0) // Bit zero is the 'yield' flag
+#define TASK_STATE_YIELD    (1UL << 0) // Bit zero is the 'yield' flag 
+#define TASK_STATE_SLEEP    (1UL << 1) // Bit one is the 'sleep' flag 
+#define TASK_STATE_WAIT     (1UL << 2) // Bit two is the 'wait' flag
+#define TASK_STATE_PRIORITY_INHERITED    (1UL << 3) //Bit five is whether or not the task is currently running with inherited priority
 
 #endif /* _TASK_H_ */
